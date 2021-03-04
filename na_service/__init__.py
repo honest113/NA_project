@@ -1,5 +1,6 @@
 import celery
 from flask import Flask
+import flask_monitoringdashboard as dashboard
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -9,7 +10,8 @@ from decouple import config
 from na_service.flask_celery import make_celery
 
 app = Flask(__name__)
-
+dashboard.config.init_from(file='/home/honest113/GitHub/NA_project/config.cfg')
+dashboard.bind(app)
 
 app.config['SECRET_KEY'] = '08886dd2e696be3767fbd3540fe1a3'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
