@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.config['CELERY_BROKER_URL'] = 'redis://0.0.0.0:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'db+sqlite:///db.sqlite3'
+app.config['result_backend'] = 'db+sqlite:///db.sqlite3'
 
 celery = make_celery(app=app)
 
