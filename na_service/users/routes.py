@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import render_template, url_for, flash, redirect, request, abort
 from flask_login import login_user, current_user, logout_user, login_required
 
-from na_service import db, bcrypt
+from na_service import db, bcrypt, logger_user, logger_celery
 from na_service.models import User, Post
 from na_service.users.forms import RegistrationForm, LoginForm, RequestResetForm, UpdateAccountForm, ResetPasswordForm
 from na_service.users.utils import *
@@ -19,6 +19,7 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
+        logger_user.info(f"An account has been registered - email '{user.email}'")
         flash('Your acount has been created! You are now able to log in', 'success')
         return redirect(url_for('users.login'))
     return render_template("register.html", title="Register", form=form)
@@ -32,6 +33,7 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
+            logger_user.info(f"user: {user.username} login success!")
             next_page = request.args.get('next')
             flash("Login Successful", "success")
             return redirect(next_page) if next_page else redirect(url_for("main.home"))
@@ -79,8 +81,9 @@ def reset_request():
     form = RequestResetForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        print(user.id, user.username, user.email)
+        # print(user.id, user.username, user.email)
         token = user.get_reset_token()
+        logger_user.info(f"user: {user.username} get reset token")
         email_data = {
             'user_email': user.email,
             'body': f'''To reset your password, visit the following link:
@@ -88,7 +91,9 @@ def reset_request():
 If you did not make this request then simply ignore this email and no changes will be made.
 '''
         }
-        send_reset_email.delay(data=email_data)
+        task_celery = send_reset_email.delay(data=email_data)
+        # print(task_celery.id)
+        logger_celery.info(f"Task Celery receive: task_id '{task_celery.id}'")
         flash('An email has been sent with instructions to reset your password', 'info')
         return redirect(url_for('users.login'))
     return render_template("reset_request.html", title="Reset Password", form=form)

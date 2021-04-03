@@ -1,4 +1,3 @@
-import celery
 from flask import Flask
 import flask_monitoringdashboard as dashboard
 from flask_sqlalchemy import SQLAlchemy
@@ -10,6 +9,26 @@ from decouple import config
 from na_service.flask_celery import make_celery
 
 app = Flask(__name__)
+
+# logging app
+import logging
+import logging.config
+from pythonjsonlogger import jsonlogger
+from datetime import datetime
+
+class ElkJsonFormatter(jsonlogger.JsonFormatter):
+    def add_fields(self, log_record, record, message_dict):
+        super(ElkJsonFormatter, self).add_fields(log_record, record, message_dict)
+        log_record['@timestamp'] = datetime.now().isoformat()
+        log_record['level'] = record.levelname
+        log_record['logger'] = record.name
+
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger("MainLogger")
+logger_post = logging.getLogger("PostLogger")
+logger_user = logging.getLogger("UserLogger")
+logger_celery = logging.getLogger("CeleryLogger")
+
 dashboard.config.init_from(file='/home/honest113/GitHub/NA_project/config.cfg')
 dashboard.bind(app)
 
