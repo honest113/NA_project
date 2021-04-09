@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_login import login_manager
 from flask_mail import Mail, Message
 from decouple import config
+from elasticapm.contrib.flask import ElasticAPM
 from na_service.flask_celery import make_celery
 
 app = Flask(__name__)
@@ -28,6 +29,16 @@ logger = logging.getLogger("MainLogger")
 logger_post = logging.getLogger("PostLogger")
 logger_user = logging.getLogger("UserLogger")
 logger_celery = logging.getLogger("CeleryLogger")
+
+# apm
+app.config['ELASTIC_APM'] = {
+    'SERVICE_NAME': 'flaskapp',
+    'SECRET_TOKEN': '08886dd2e696be3767fbd3540fe1a3',
+    'SERVER_URL': 'http://localhost:8200',
+    'DEBUG': True
+}
+
+apm = ElasticAPM(app)
 
 dashboard.config.init_from(file='/home/honest113/GitHub/NA_project/config.cfg')
 dashboard.bind(app)
